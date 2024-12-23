@@ -245,8 +245,7 @@
             lastTap = currentTime;
         });
 
-       // Fetch and display specific GitHub repos
-async function fetchSpecificRepos() {
+    async function fetchSpecificRepos() {
     const specificRepos = [
         'https://github.com/COSYBANANA63/Online-Examination-System',
         'https://github.com/COSYBANANA63/YouTube-Downloader-FlaskAPI'
@@ -283,13 +282,20 @@ async function fetchSpecificRepos() {
     `;
     container.appendChild(chopinsUICard);
 
-    // Fetch other repositories from GitHub
+    // other repos
     for (const repoUrl of specificRepos) {
         try {
-            // Extract username and repo name from URL
             const [, username, repoName] = repoUrl.match(/github\.com\/(.+)\/(.+)/);
             
-            const response = await fetch(`https://api.github.com/repos/${username}/${repoName}`);
+            const response = await fetch(`https://api.github.com/repos/${username}/${repoName}`, {
+                headers: {
+                    'Authorization': `token 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` // Replace with your token
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const repo = await response.json();
 
             const col = document.createElement('div');
