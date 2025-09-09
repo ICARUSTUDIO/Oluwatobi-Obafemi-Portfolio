@@ -22,6 +22,38 @@
     }
     .scroll-reveal { opacity: 0; transform: translateY(40px); transition: all 0.6s ease; }
     .scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+    /* Popup */
+    #game-popup {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid #a855f7;
+      border-radius: 1rem;
+      padding: 20px;
+      z-index: 1000;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+    #game-popup.show {
+      display: block;
+      transform: scale(1);
+      opacity: 1;
+      animation: popIn 0.5s ease;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    canvas {
+      background: #111827;
+      display: none;
+      margin-top: 10px;
+      border-radius: 0.5rem;
+      border: 1px solid #a855f7;
+    }
   </style>
 </head>
 <body class="min-h-screen text-white">
@@ -49,7 +81,7 @@
   <header class="min-h-screen flex flex-col justify-center items-center text-center px-6">
     <!-- Profile Image Placeholder -->
     <div class="w-40 h-40 rounded-full glass overflow-hidden mb-6">
-      <img src="Tobi.jpg" alt="Profile" class="w-full h-full object-cover">
+      <img src=Tobi.jpg alt="Profile" class="w-full h-full object-cover">
     </div>
     <h1 class="text-5xl md:text-7xl font-extrabold mb-6">Tobi Obafemi</h1>
     <p class="text-xl md:text-2xl text-gray-300 mb-8">Creative Developer & Digital Artist</p>
@@ -138,6 +170,16 @@
     <div class="glass px-6 py-3 rounded-full inline-block">&copy; 2025 Tobi Obafemi</div>
   </footer>
 
+  <!-- Game Popup -->
+  <div id="game-popup" class="glass">
+    <p class="font-bold mb-4">🎮 Play Brick Breaker by ICARUSTUDIO?</p>
+    <div class="flex gap-4">
+      <button id="play-btn" class="glass px-4 py-2 rounded hover:bg-white/10">Yes</button>
+      <button id="close-btn" class="glass px-4 py-2 rounded hover:bg-white/10">No</button>
+    </div>
+    <canvas id="brickBreaker" width="300" height="400"></canvas>
+  </div>
+
   <script>
     lucide.createIcons();
 
@@ -150,6 +192,91 @@
     }, { threshold: 0.1 });
 
     document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
-  </script>
-</body>
-</html>
+
+    // Brick Breaker Popup Logic
+    window.addEventListener('scroll', () => {
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+        document.getElementById('game-popup').classList.add('show');
+      }
+    });
+
+    const popup = document.getElementById('game-popup');
+    const playBtn = document.getElementById('play-btn');
+    const closeBtn = document.getElementById('close-btn');
+    const canvas = document.getElementById('brickBreaker');
+    const ctx = canvas.getContext('2d');
+
+    closeBtn.addEventListener('click', () => popup.classList.remove('show'));
+
+    playBtn.addEventListener('click', () => {
+      canvas.style.display = 'block';
+      startGame();
+    });
+
+    // Simple Brick Breaker Game
+    let ballRadius = 8;
+    let x = canvas.width/2;
+    let y = canvas.height-30;
+    let dx = 2;
+    let dy = -2;
+    let paddleHeight = 10;
+    let paddleWidth = 75;
+    let paddleX = (canvas.width-paddleWidth)/2;
+    let rightPressed = false;
+    let leftPressed = false;
+    let brickRowCount = 3;
+    let brickColumnCount = 5;
+    let brickWidth = 50;
+    let brickHeight = 20;
+    let brickPadding = 10;
+    let brickOffsetTop = 30;
+    let brickOffsetLeft = 30;
+    let bricks = [];
+    for(let c=0; c<brickColumnCount; c++){
+      bricks[c] = [];
+      for(let r=0; r<brickRowCount; r++){
+        bricks[c][r] = { x:0, y:0, status:1 };
+      }
+    }
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function keyDownHandler(e){
+      if(e.key === "Right" || e.key === "ArrowRight"){ rightPressed = true; }
+      else if(e.key === "Left" || e.key === "ArrowLeft"){ leftPressed = true; }
+    }
+    function keyUpHandler(e){
+      if(e.key === "Right" || e.key === "ArrowRight"){ rightPressed = false; }
+      else if(e.key === "Left" || e.key === "ArrowLeft"){ leftPressed = false; }
+    }
+
+    function drawBall(){
+      ctx.beginPath();
+      ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+      ctx.fillStyle = "#a855f7";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawPaddle(){
+      ctx.beginPath();
+      ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawBricks(){
+      for(let c=0; c<brickColumnCount; c++){
+        for(let r=0; r<brickRowCount; r++){
+          if(bricks[c][r].status==1){
+            let brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+            let brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+            bricks[c][r].x = brickX;
+            bricks[c][r].y = brickY;
+            ctx.beginPath();
+            ctx.rect(brickX, brickY, brickWidth, brickHeight);
+            ctx.fillStyle = "#6366f1";
+            ctx.fill();
+            ctx
